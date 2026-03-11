@@ -21,7 +21,7 @@ struct InventoryChartView: View {
         GeometryReader { geo in
             HStack(spacing: 2) {
                 ForEach(Array(data.enumerated()), id: \.offset) { _, item in
-                    let fraction = item.1 / total
+                    let fraction = total > 0 ? item.1 / total : 0
                     RoundedRectangle(cornerRadius: 4)
                         .fill(item.2)
                         .frame(width: max(geo.size.width * fraction - 2, 4))
@@ -51,81 +51,28 @@ struct InventoryChartView: View {
     }
 }
 
-// MARK: - Alerts List
+// MARK: - Alerts List (used in AlertsView)
 struct AlertsListView: View {
     let alerts: [MaintenanceReminder]
 
     var body: some View {
         VStack(spacing: 10) {
             ForEach(alerts) { alert in
-                alertRow(alert: alert)
+                DashAlertRow(alert: alert)
             }
         }
-    }
-
-    private func alertRow(alert: MaintenanceReminder) -> some View {
-        let dueDateText = RelativeDateTimeFormatter().localizedString(for: alert.dueDate, relativeTo: Date())
-        return HStack(spacing: 14) {
-            Image(systemName: alert.icon)
-                .font(.body)
-                .foregroundColor(alert.isUrgent ? .white : .orange)
-                .frame(width: 40, height: 40)
-                .background(alert.isUrgent ? Color.red : Color.orange.opacity(0.12))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-            VStack(alignment: .leading, spacing: 3) {
-                Text(alert.title)
-                    .font(.system(size: 15, weight: .medium))
-                Text("\(alert.itemName) · \(dueDateText)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .padding(14)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
     }
 }
 
-// MARK: - Recent Items
+// MARK: - Recent Items (used in other views)
 struct RecentItemsView: View {
     let items: [HomeItem]
 
     var body: some View {
         VStack(spacing: 10) {
             ForEach(items) { item in
-                itemRow(item: item)
+                DashItemRow(item: item)
             }
         }
-    }
-
-    private func itemRow(item: HomeItem) -> some View {
-        HStack(spacing: 14) {
-            Image(systemName: item.icon)
-                .font(.body)
-                .foregroundColor(.black)
-                .frame(width: 40, height: 40)
-                .background(Color(.systemGray6))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-            VStack(alignment: .leading, spacing: 3) {
-                Text(item.name)
-                    .font(.system(size: 15, weight: .medium))
-                Text("\(item.brand) · \(item.category)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .padding(14)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
     }
 }

@@ -3,128 +3,114 @@ import SwiftUI
 struct WelcomeScreen: View {
     let onGetStarted: () -> Void
 
+    private let accent = Color(hex: "1A6BFF")
+
     var body: some View {
-        ZStack {
-            gradientBG
-            VStack(spacing: 0) {
-                Spacer().frame(height: 60)
-                logoSection
-                Spacer()
-                phonePreview
-                Spacer()
-                titleSection
-                Spacer().frame(height: 32)
-                bottomActions
-                Spacer().frame(height: 40)
-            }
-            .padding(.horizontal, 28)
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            heroIllustration
+            Spacer(minLength: 0)
+            textContent
+                .padding(.horizontal, 28)
+            Spacer(minLength: 24)
+            bottomActions
+                .padding(.horizontal, 24)
+                .padding(.bottom, 48)
         }
-        .ignoresSafeArea()
+        .background(Color.white.ignoresSafeArea())
     }
 
-    private var gradientBG: some View {
-        LinearGradient(
-            colors: [Color(hex: "0A0A2E"), Color(hex: "1a1a4e"), Color(hex: "0d2137")],
-            startPoint: .topLeading, endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
-    }
+    // MARK: Illustration
+    private var heroIllustration: some View {
+        ZStack {
+            // Background blob
+            Ellipse()
+                .fill(accent.opacity(0.07))
+                .frame(width: 340, height: 280)
+                .offset(y: -10)
 
-    private var logoSection: some View {
-        HStack(spacing: 10) {
+            // Floating room cards
+            VStack(spacing: 14) {
+                HStack(spacing: 14) {
+                    roomPill(icon: "sofa.fill", label: "Living Room", color: accent)
+                    roomPill(icon: "refrigerator.fill", label: "Kitchen", color: Color(hex: "FF6B2B"))
+                }
+                HStack(spacing: 14) {
+                    roomPill(icon: "bed.double.fill", label: "Bedroom", color: Color(hex: "AF52DE"))
+                    roomPill(icon: "car.fill", label: "Garage", color: Color(hex: "34C759"))
+                }
+            }
+
+            // Center logo circle
             ZStack {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(LinearGradient(colors: [Color(hex: "6C63FF"), Color(hex: "3B82F6")],
-                                        startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 48, height: 48)
+                Circle()
+                    .fill(accent)
+                    .frame(width: 70, height: 70)
+                    .shadow(color: accent.opacity(0.4), radius: 16, y: 6)
                 Image(systemName: "house.lodge.fill")
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.white)
             }
-            Text("NextZen")
-                .font(.system(size: 36, weight: .bold))
-                .foregroundColor(.white)
         }
+        .frame(height: 320)
     }
 
-    private var phonePreview: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 32)
-                .fill(Color.white.opacity(0.08))
-                .frame(height: 260)
-            VStack(spacing: 14) {
-                HStack(spacing: 12) {
-                    ForEach(previewRooms, id: \.0) { room in
-                        roomChip(icon: room.0, label: room.1, color: room.2)
-                    }
-                }
-                HStack(spacing: 8) {
-                    miniStat(label: "67 Items", icon: "cube.fill")
-                    miniStat(label: "6 Rooms", icon: "square.grid.2x2")
-                    miniStat(label: "2 Alerts", icon: "bell.fill")
-                }
-            }
+    private func roomPill(icon: String, label: String, color: Color) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundColor(color)
+                .frame(width: 36, height: 36)
+                .background(color.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            Text(label)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.primary)
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .shadow(color: .black.opacity(0.07), radius: 10, y: 4)
     }
 
-    private let previewRooms: [(String, String, Color)] = [
-        ("sofa.fill", "Living", Color(hex: "3B82F6")),
-        ("refrigerator.fill", "Kitchen", Color(hex: "F59E0B")),
-        ("bed.double.fill", "Bedroom", Color(hex: "8B5CF6"))
-    ]
-
-    private func roomChip(icon: String, label: String, color: Color) -> some View {
-        VStack(spacing: 6) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(color.opacity(0.2))
-                    .frame(width: 60, height: 60)
-                Image(systemName: icon)
-                    .font(.system(size: 24))
-                    .foregroundColor(color)
-            }
-            Text(label).font(.caption).foregroundColor(.white.opacity(0.8))
-        }
-    }
-
-    private func miniStat(label: String, icon: String) -> some View {
-        HStack(spacing: 5) {
-            Image(systemName: icon).font(.caption2).foregroundColor(.white.opacity(0.6))
-            Text(label).font(.caption2).foregroundColor(.white.opacity(0.8))
-        }
-        .padding(.horizontal, 10).padding(.vertical, 6)
-        .background(Color.white.opacity(0.1))
-        .clipShape(Capsule())
-    }
-
-    private var titleSection: some View {
-        VStack(spacing: 10) {
-            Text("Your home,\nfinally organized")
-                .font(.system(size: 32, weight: .bold))
+    // MARK: Text
+    private var textContent: some View {
+        VStack(spacing: 12) {
+            Text("Your home,\nfinally organized.")
+                .font(.system(size: 34, weight: .bold))
                 .multilineTextAlignment(.center)
-                .foregroundColor(.white)
-            Text("Track every item, store every document,\nnever miss maintenance again.")
-                .font(.subheadline)
+                .foregroundColor(.primary)
+            Text("Track every item, store documents,\nand never miss maintenance again.")
+                .font(.system(size: 16))
+                .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .foregroundColor(.white.opacity(0.6))
         }
     }
 
+    // MARK: Actions
     private var bottomActions: some View {
         VStack(spacing: 14) {
             Button(action: onGetStarted) {
-                Text("Get Started")
-                    .font(.system(size: 17, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(LinearGradient(colors: [Color(hex: "6C63FF"), Color(hex: "3B82F6")],
-                                               startPoint: .leading, endPoint: .trailing))
-                    .foregroundColor(.white)
-                    .clipShape(Capsule())
+                HStack {
+                    Text("Get Started")
+                        .font(.system(size: 17, weight: .semibold))
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(accent)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
             }
+
             HStack(spacing: 4) {
-                Text("Already have an account?").foregroundColor(.white.opacity(0.5))
-                Button("Sign In") {}.fontWeight(.semibold).foregroundColor(.white)
+                Text("Already have an account?")
+                    .foregroundColor(.secondary)
+                Button("Sign In") {}
+                    .fontWeight(.semibold)
+                    .foregroundColor(accent)
             }
             .font(.subheadline)
         }

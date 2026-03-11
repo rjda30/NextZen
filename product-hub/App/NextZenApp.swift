@@ -7,14 +7,35 @@ struct NextZenApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if appState.hasCompletedOnboarding {
+            RootView()
+                .environmentObject(appState)
+                .environmentObject(homeStore)
+        }
+    }
+}
+
+struct RootView: View {
+    @EnvironmentObject var appState: AppState
+    @State private var showSplash = true
+
+    var body: some View {
+        ZStack {
+            if showSplash {
+                SplashScreenView()
+                    .transition(.opacity)
+            } else if appState.hasCompletedOnboarding {
                 MainTabView()
-                    .environmentObject(appState)
-                    .environmentObject(homeStore)
+                    .transition(.opacity)
             } else {
                 OnboardingFlowView()
-                    .environmentObject(appState)
-                    .environmentObject(homeStore)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.5), value: showSplash)
+        .animation(.easeInOut(duration: 0.4), value: appState.hasCompletedOnboarding)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
+                showSplash = false
             }
         }
     }

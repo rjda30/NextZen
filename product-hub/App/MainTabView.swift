@@ -27,7 +27,7 @@ struct MainTabView: View {
                 .tabItem { Label("Profile", systemImage: "person.fill") }
                 .tag(AppState.Tab.profile)
         }
-        .tint(.black)
+        .tint(Color(hex: "1A6BFF"))
         .onChange(of: appState.selectedTab) { tab in
             if tab == .scan {
                 showScan = true

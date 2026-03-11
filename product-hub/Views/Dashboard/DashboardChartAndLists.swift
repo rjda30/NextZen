@@ -53,7 +53,7 @@ struct InventoryChartView: View {
 
 // MARK: - Alerts List
 struct AlertsListView: View {
-    let alerts: [MaintenanceAlert]
+    let alerts: [MaintenanceReminder]
 
     var body: some View {
         VStack(spacing: 10) {
@@ -63,8 +63,9 @@ struct AlertsListView: View {
         }
     }
 
-    private func alertRow(alert: MaintenanceAlert) -> some View {
-        HStack(spacing: 14) {
+    private func alertRow(alert: MaintenanceReminder) -> some View {
+        let dueDateText = RelativeDateTimeFormatter().localizedString(for: alert.dueDate, relativeTo: Date())
+        return HStack(spacing: 14) {
             Image(systemName: alert.icon)
                 .font(.body)
                 .foregroundColor(alert.isUrgent ? .white : .orange)
@@ -74,7 +75,7 @@ struct AlertsListView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(alert.title)
                     .font(.system(size: 15, weight: .medium))
-                Text(alert.subtitle)
+                Text("\(alert.itemName) · \(dueDateText)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -113,7 +114,7 @@ struct RecentItemsView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.name)
                     .font(.system(size: 15, weight: .medium))
-                Text("\(item.brand) · \(item.room)")
+                Text("\(item.brand) · \(item.category)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

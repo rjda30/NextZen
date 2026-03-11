@@ -2,25 +2,41 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var homeStore: HomeStore
+    @State private var showScan = false
 
     var body: some View {
         TabView(selection: $appState.selectedTab) {
             DashboardView()
                 .tabItem { Label("Home", systemImage: "house.fill") }
                 .tag(AppState.Tab.home)
-            RoomsPlaceholderView()
+
+            RoomsView()
                 .tabItem { Label("Rooms", systemImage: "square.grid.2x2.fill") }
                 .tag(AppState.Tab.rooms)
-            SearchPlaceholderView()
-                .tabItem { Label("Search", systemImage: "magnifyingglass") }
-                .tag(AppState.Tab.search)
-            AlertsPlaceholderView()
+
+            Color.clear
+                .tabItem { Label("Scan", systemImage: "barcode.viewfinder") }
+                .tag(AppState.Tab.scan)
+
+            AlertsView()
                 .tabItem { Label("Alerts", systemImage: "bell.fill") }
                 .tag(AppState.Tab.alerts)
-            ProfilePlaceholderView()
+
+            ProfileView()
                 .tabItem { Label("Profile", systemImage: "person.fill") }
                 .tag(AppState.Tab.profile)
         }
         .tint(.black)
+        .onChange(of: appState.selectedTab) { tab in
+            if tab == .scan {
+                showScan = true
+                appState.selectedTab = .home
+            }
+        }
+        .sheet(isPresented: $showScan) {
+            ScanView()
+                .environmentObject(homeStore)
+        }
     }
 }

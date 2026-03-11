@@ -1,63 +1,222 @@
 import Foundation
 import SwiftUI
 
-struct HomeRoom: Identifiable {
-    let id = UUID()
-    let name: String
-    let icon: String
-    let itemCount: Int
-    let color: Color
+// MARK: - Core Models
+
+struct HomeRoom: Identifiable, Equatable {
+    var id = UUID()
+    var name: String
+    var icon: String
+    var color: Color
+    var items: [HomeItem] = []
+
+    var itemCount: Int { items.count }
+
+    static let iconOptions: [(String, Color)] = [
+        ("sofa.fill", .blue), ("refrigerator.fill", .orange), ("bed.double.fill", .purple),
+        ("shower.fill", .teal), ("car.fill", .gray), ("desktopcomputer", .indigo),
+        ("washer.fill", .cyan), ("fork.knife", .red), ("house.fill", .green),
+        ("door.garage.closed", .brown), ("backpack.fill", .pink), ("tree.fill", .mint)
+    ]
 }
 
-struct HomeItem: Identifiable {
-    let id = UUID()
-    let name: String
-    let brand: String
-    let room: String
-    let category: String
-    let icon: String
-    let warrantyExpires: Date?
+struct HomeItem: Identifiable, Equatable {
+    var id = UUID()
+    var name: String
+    var category: String
+    var brand: String
+    var model: String
+    var serialNumber: String
+    var notes: String
+    var icon: String
+    var roomId: UUID?
+    var warrantyExpires: Date?
+    var purchaseDate: Date?
+    var documents: [HomeDocument] = []
+    var reminders: [MaintenanceReminder] = []
+    var createdAt: Date = Date()
 }
 
-struct MaintenanceAlert: Identifiable {
-    let id = UUID()
-    let title: String
-    let subtitle: String
-    let icon: String
-    let dueDate: Date
-    let isUrgent: Bool
+struct HomeDocument: Identifiable, Equatable {
+    var id = UUID()
+    var name: String
+    var type: DocType
+    var dateAdded: Date = Date()
+
+    enum DocType: String, CaseIterable {
+        case manual = "Manual"
+        case receipt = "Receipt"
+        case warranty = "Warranty"
+        case other = "Other"
+
+        var icon: String {
+            switch self {
+            case .manual: return "book.fill"
+            case .receipt: return "receipt.fill"
+            case .warranty: return "checkmark.shield.fill"
+            case .other: return "doc.fill"
+            }
+        }
+    }
 }
 
-struct SampleData {
-    static let rooms: [HomeRoom] = [
-        HomeRoom(name: "Living Room", icon: "sofa.fill", itemCount: 12, color: .blue),
-        HomeRoom(name: "Kitchen", icon: "refrigerator.fill", itemCount: 18, color: .orange),
-        HomeRoom(name: "Bedroom", icon: "bed.double.fill", itemCount: 8, color: .purple),
-        HomeRoom(name: "Bathroom", icon: "shower.fill", itemCount: 5, color: .teal),
-        HomeRoom(name: "Garage", icon: "car.fill", itemCount: 15, color: .gray),
-        HomeRoom(name: "Office", icon: "desktopcomputer", itemCount: 9, color: .indigo)
-    ]
+struct MaintenanceReminder: Identifiable, Equatable {
+    var id = UUID()
+    var title: String
+    var dueDate: Date
+    var isCompleted: Bool = false
+    var isUrgent: Bool = false
+    var itemId: UUID?
+    var itemName: String
+    var icon: String
+}
 
-    static let items: [HomeItem] = [
-        HomeItem(name: "Samsung TV 65\"", brand: "Samsung", room: "Living Room", category: "Electronics", icon: "tv.fill", warrantyExpires: Calendar.current.date(byAdding: .month, value: 8, to: Date())),
-        HomeItem(name: "Dyson V15", brand: "Dyson", room: "Living Room", category: "Appliance", icon: "fan.fill", warrantyExpires: Calendar.current.date(byAdding: .month, value: 3, to: Date())),
-        HomeItem(name: "KitchenAid Mixer", brand: "KitchenAid", room: "Kitchen", category: "Appliance", icon: "blender.fill", warrantyExpires: Calendar.current.date(byAdding: .year, value: 2, to: Date())),
-        HomeItem(name: "Nest Thermostat", brand: "Google", room: "Living Room", category: "Smart Home", icon: "thermometer.medium", warrantyExpires: Calendar.current.date(byAdding: .month, value: 14, to: Date())),
-        HomeItem(name: "Bosch Dishwasher", brand: "Bosch", room: "Kitchen", category: "Appliance", icon: "dishwasher.fill", warrantyExpires: Calendar.current.date(byAdding: .month, value: 18, to: Date()))
-    ]
+// MARK: - Category Options
+enum ItemCategory: String, CaseIterable {
+    case electronics = "Electronics"
+    case appliance = "Appliance"
+    case furniture = "Furniture"
+    case smartHome = "Smart Home"
+    case plumbing = "Plumbing"
+    case hvac = "HVAC"
+    case lighting = "Lighting"
+    case other = "Other"
 
-    static let alerts: [MaintenanceAlert] = [
-        MaintenanceAlert(title: "HVAC Filter Change", subtitle: "Last changed 89 days ago", icon: "wind", dueDate: Date().addingTimeInterval(86400), isUrgent: true),
-        MaintenanceAlert(title: "Smoke Detector Battery", subtitle: "Replace batteries", icon: "flame.fill", dueDate: Date().addingTimeInterval(86400 * 3), isUrgent: true),
-        MaintenanceAlert(title: "Dishwasher Maintenance", subtitle: "Run cleaning cycle", icon: "dishwasher.fill", dueDate: Date().addingTimeInterval(86400 * 7), isUrgent: false),
-        MaintenanceAlert(title: "Dyson V15 Warranty", subtitle: "Expires in 3 months", icon: "exclamationmark.shield.fill", dueDate: Calendar.current.date(byAdding: .month, value: 3, to: Date())!, isUrgent: false)
-    ]
+    var icon: String {
+        switch self {
+        case .electronics: return "tv.fill"
+        case .appliance: return "refrigerator.fill"
+        case .furniture: return "sofa.fill"
+        case .smartHome: return "homekit"
+        case .plumbing: return "shower.fill"
+        case .hvac: return "wind"
+        case .lighting: return "lightbulb.fill"
+        case .other: return "cube.fill"
+        }
+    }
+}
 
-    static let categoryDistribution: [(String, Double, Color)] = [
-        ("Electronics", 28, .blue),
-        ("Appliances", 35, .orange),
-        ("Furniture", 20, .purple),
-        ("Smart Home", 10, .teal),
-        ("Other", 7, .gray)
-    ]
+// MARK: - HomeStore (Single Source of Truth)
+final class HomeStore: ObservableObject {
+    @Published var rooms: [HomeRoom] = HomeStore.sampleRooms()
+    @Published var reminders: [MaintenanceReminder] = HomeStore.sampleReminders()
+    @Published var homeName: String = "My Apartment"
+
+    var allItems: [HomeItem] {
+        rooms.flatMap { $0.items }
+    }
+
+    func room(for item: HomeItem) -> HomeRoom? {
+        rooms.first { $0.id == item.roomId }
+    }
+
+    // MARK: Room Operations
+    func addRoom(_ room: HomeRoom) {
+        rooms.append(room)
+    }
+
+    func updateRoom(_ room: HomeRoom) {
+        if let idx = rooms.firstIndex(where: { $0.id == room.id }) {
+            rooms[idx] = room
+        }
+    }
+
+    func deleteRoom(id: UUID) {
+        rooms.removeAll { $0.id == id }
+    }
+
+    // MARK: Item Operations
+    func addItem(_ item: HomeItem, toRoomId roomId: UUID) {
+        var newItem = item
+        newItem.roomId = roomId
+        if let idx = rooms.firstIndex(where: { $0.id == roomId }) {
+            rooms[idx].items.append(newItem)
+        }
+    }
+
+    func updateItem(_ item: HomeItem) {
+        for rIdx in rooms.indices {
+            if let iIdx = rooms[rIdx].items.firstIndex(where: { $0.id == item.id }) {
+                rooms[rIdx].items[iIdx] = item
+                return
+            }
+        }
+    }
+
+    func deleteItem(id: UUID) {
+        for rIdx in rooms.indices {
+            rooms[rIdx].items.removeAll { $0.id == id }
+        }
+    }
+
+    // MARK: Reminder Operations
+    func addReminder(_ reminder: MaintenanceReminder) {
+        reminders.append(reminder)
+    }
+
+    func toggleReminder(id: UUID) {
+        if let idx = reminders.firstIndex(where: { $0.id == id }) {
+            reminders[idx].isCompleted.toggle()
+        }
+    }
+
+    func deleteReminder(id: UUID) {
+        reminders.removeAll { $0.id == id }
+    }
+
+    var activeReminders: [MaintenanceReminder] {
+        reminders.filter { !$0.isCompleted }.sorted { $0.dueDate < $1.dueDate }
+    }
+
+    var urgentCount: Int {
+        activeReminders.filter { $0.isUrgent || $0.dueDate < Date().addingTimeInterval(86400 * 3) }.count
+    }
+
+    // MARK: Sample Data
+    static func sampleRooms() -> [HomeRoom] {
+        var kitchen = HomeRoom(name: "Kitchen", icon: "refrigerator.fill", color: .orange)
+        kitchen.items = [
+            HomeItem(name: "KitchenAid Mixer", category: "Appliance", brand: "KitchenAid", model: "KSM150PS", serialNumber: "KA-2021-8831", notes: "5-quart tilt-head", icon: "blender.fill", roomId: kitchen.id, warrantyExpires: Calendar.current.date(byAdding: .year, value: 2, to: Date())),
+            HomeItem(name: "Bosch Dishwasher", category: "Appliance", brand: "Bosch", model: "SHPM88Z75N", serialNumber: "BSH-1122-4455", notes: "", icon: "dishwasher.fill", roomId: kitchen.id, warrantyExpires: Calendar.current.date(byAdding: .month, value: 18, to: Date()))
+        ]
+
+        var living = HomeRoom(name: "Living Room", icon: "sofa.fill", color: .blue)
+        living.items = [
+            HomeItem(name: "Samsung TV 65\"", category: "Electronics", brand: "Samsung", model: "QN65S95C", serialNumber: "SG-TV-9900", notes: "Wall mounted", icon: "tv.fill", roomId: living.id, warrantyExpires: Calendar.current.date(byAdding: .month, value: 8, to: Date())),
+            HomeItem(name: "Dyson V15", category: "Appliance", brand: "Dyson", model: "V15 Detect", serialNumber: "DY-V15-5678", notes: "", icon: "fan.fill", roomId: living.id, warrantyExpires: Calendar.current.date(byAdding: .month, value: 3, to: Date())),
+            HomeItem(name: "Nest Thermostat", category: "Smart Home", brand: "Google", model: "4th Gen", serialNumber: "NT-GG-0012", notes: "Set to 72°F default", icon: "thermometer.medium", roomId: living.id)
+        ]
+
+        var bedroom = HomeRoom(name: "Bedroom", icon: "bed.double.fill", color: .purple)
+        bedroom.items = [
+            HomeItem(name: "Casper Mattress", category: "Furniture", brand: "Casper", model: "Wave Hybrid", serialNumber: "", notes: "King size", icon: "bed.double.fill", roomId: bedroom.id, warrantyExpires: Calendar.current.date(byAdding: .year, value: 8, to: Date()))
+        ]
+
+        let bathroom = HomeRoom(name: "Bathroom", icon: "shower.fill", color: .teal)
+        let garage = HomeRoom(name: "Garage", icon: "car.fill", color: .gray)
+        return [kitchen, living, bedroom, bathroom, garage]
+    }
+
+    static func sampleReminders() -> [MaintenanceReminder] {
+        [
+            MaintenanceReminder(title: "HVAC Filter Change", dueDate: Date().addingTimeInterval(86400), isUrgent: true, itemName: "HVAC System", icon: "wind"),
+            MaintenanceReminder(title: "Smoke Detector Battery", dueDate: Date().addingTimeInterval(86400 * 3), isUrgent: true, itemName: "Smoke Detector", icon: "flame.fill"),
+            MaintenanceReminder(title: "Dishwasher Cleaning Cycle", dueDate: Date().addingTimeInterval(86400 * 7), isUrgent: false, itemName: "Bosch Dishwasher", icon: "dishwasher.fill"),
+            MaintenanceReminder(title: "Dyson Filter Clean", dueDate: Date().addingTimeInterval(86400 * 14), isUrgent: false, itemName: "Dyson V15", icon: "fan.fill")
+        ]
+    }
+
+    var categoryDistribution: [(String, Double, Color)] {
+        let categories = allItems.map { $0.category }
+        var counts: [String: Int] = [:]
+        for c in categories { counts[c, default: 0] += 1 }
+        let total = Double(max(allItems.count, 1))
+        let colorMap: [String: Color] = [
+            "Electronics": .blue, "Appliance": .orange, "Furniture": .purple,
+            "Smart Home": .teal, "HVAC": .cyan, "Other": .gray
+        ]
+        return counts.map { (key, val) in
+            (key, Double(val) / total * 100, colorMap[key] ?? .indigo)
+        }.sorted { $0.1 > $1.1 }
+    }
 }

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct DashboardView: View {
+    @EnvironmentObject var store: HomeStore
+
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
@@ -17,7 +19,7 @@ struct DashboardView: View {
                 .padding(.top, 8)
             }
             .background(Color(.systemGray6).opacity(0.5))
-            .navigationTitle("My Home")
+            .navigationTitle(store.homeName)
             .toolbar { toolbarContent }
         }
     }
@@ -25,9 +27,9 @@ struct DashboardView: View {
     // MARK: - Hero
     private var heroCard: some View {
         HeroCardView(
-            totalItems: 67,
-            totalRooms: SampleData.rooms.count,
-            alertCount: SampleData.alerts.filter(\.isUrgent).count
+            totalItems: store.allItems.count,
+            totalRooms: store.rooms.count,
+            alertCount: store.urgentCount
         )
     }
 
@@ -39,28 +41,29 @@ struct DashboardView: View {
     // MARK: - Rooms
     private var roomsSection: some View {
         DashboardSectionView(title: "Rooms", actionLabel: "See All") {
-            RoomsGridView(rooms: SampleData.rooms)
+            RoomsGridView(rooms: store.rooms)
         }
     }
 
     // MARK: - Chart
     private var inventoryChart: some View {
         DashboardSectionView(title: "Inventory Breakdown", actionLabel: nil) {
-            InventoryChartView(data: SampleData.categoryDistribution)
+            InventoryChartView(data: store.categoryDistribution)
         }
     }
 
     // MARK: - Alerts
     private var alertsSection: some View {
         DashboardSectionView(title: "Upcoming Alerts", actionLabel: "View All") {
-            AlertsListView(alerts: Array(SampleData.alerts.prefix(3)))
+            AlertsListView(alerts: Array(store.activeReminders.prefix(3)))
         }
     }
 
     // MARK: - Recent Items
     private var recentItemsSection: some View {
-        DashboardSectionView(title: "Recent Items", actionLabel: "View All") {
-            RecentItemsView(items: Array(SampleData.items.prefix(4)))
+        let recent = Array(store.allItems.sorted { $0.createdAt > $1.createdAt }.prefix(4))
+        return DashboardSectionView(title: "Recent Items", actionLabel: "View All") {
+            RecentItemsView(items: recent)
         }
     }
 

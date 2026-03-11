@@ -5,6 +5,6 @@ final class AppState: ObservableObject {
     @Published var selectedTab: Tab = .home
 
     enum Tab: Int, CaseIterable {
-        case home, rooms, search, alerts, profile
+        case home, rooms, scan, alerts, profile
     }
 }

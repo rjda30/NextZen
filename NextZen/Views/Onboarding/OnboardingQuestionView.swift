@@ -12,25 +12,30 @@ struct OnboardingQuestionView: View {
     private let accent = Color(hex: "1A6BFF")
 
     var body: some View {
-        VStack(spacing: 0) {
-            topBar
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 32) {
-                    questionHeader
-                    optionsList
-                    Spacer(minLength: 40)
+        GeometryReader { geo in
+            VStack(spacing: 0) {
+                topBar
+                    .padding(.top, geo.safeAreaInsets.top)
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 24) {
+                        questionHeader
+                        optionsList
+                        Spacer(minLength: 20)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 32)
+                bottomBar
+                    .padding(.bottom, geo.safeAreaInsets.bottom)
             }
-            bottomBar
+            .background(Color.white)
         }
-        .background(Color.white.ignoresSafeArea())
+        .ignoresSafeArea()
     }
 
     // MARK: Top Bar
     private var topBar: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             HStack {
                 Button(action: onBack) {
                     Image(systemName: "arrow.left")
@@ -52,7 +57,6 @@ struct OnboardingQuestionView: View {
             progressBar
                 .padding(.horizontal, 24)
         }
-        .padding(.top, 60)
         .padding(.bottom, 8)
     }
 

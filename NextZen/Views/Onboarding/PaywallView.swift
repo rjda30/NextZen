@@ -23,22 +23,27 @@ struct PaywallView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
-            topBar
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 24) {
-                    headerSection
-                    featureList
-                    planSelector
-                    ctaSection
-                    restoreButton
-                    legalText
+        GeometryReader { geo in
+            VStack(spacing: 0) {
+                topBar
+                    .padding(.top, geo.safeAreaInsets.top)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        headerSection
+                        featureList
+                        planSelector
+                        ctaSection
+                        restoreButton
+                        legalText
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 16)
+                    .padding(.bottom, 40 + geo.safeAreaInsets.bottom)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 16)
-                .padding(.bottom, 40)
             }
+            .background(Color.white)
         }
+        .ignoresSafeArea()
         .background(Color.white.ignoresSafeArea())
         .task { await purchases.loadOfferings() }
         .overlay {
@@ -75,7 +80,7 @@ struct PaywallView: View {
             Color.clear.frame(width: 38)
         }
         .padding(.horizontal, 24)
-        .padding(.top, 60)
+        .padding(.top, 16)
         .padding(.bottom, 12)
     }
 

@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Supabase
 
 // MARK: - Core Models
 
@@ -32,6 +33,7 @@ struct HomeItem: Identifiable, Equatable {
     var roomId: UUID?
     var warrantyExpires: Date?
     var purchaseDate: Date?
+    var barcode: String? = nil
     var documents: [HomeDocument] = []
     var reminders: [MaintenanceReminder] = []
     var createdAt: Date = Date()
@@ -101,6 +103,78 @@ final class HomeStore: ObservableObject {
     @Published var rooms: [HomeRoom] = HomeStore.sampleRooms()
     @Published var reminders: [MaintenanceReminder] = HomeStore.sampleReminders()
     @Published var homeName: String = "My Apartment"
+    @Published var isSyncing = false
+    @Published var syncError: String? = nil
+
+    // MARK: Supabase Sync
+    @MainActor
+    func syncFromSupabase(userId: UUID) async {
+        isSyncing = true
+        syncError = nil
+        do {
+            let remotRooms = try await SyncService.shared.fetchRooms(userId: userId)
+            let remoteItems = try await SyncService.shared.fetchItems(userId: userId)
+            let remoteReminders = try await SyncService.shared.fetchReminders(userId: userId)
+
+            var builtRooms: [HomeRoom] = remotRooms.map { dto in
+                HomeRoom(id: dto.id, name: dto.name, icon: dto.icon, color: Color(hex: dto.colorHex))
+            }
+            for item in remoteItems {
+                let homeItem = HomeItem(
+                    id: item.id,
+                    name: item.name,
+                    category: item.category,
+                    brand: item.brand,
+                    model: item.model,
+                    serialNumber: item.serialNumber,
+                    notes: item.notes,
+                    icon: item.icon,
+                    roomId: item.roomId,
+                    warrantyExpires: item.warrantyExpires,
+                    barcode: item.barcode,
+                    createdAt: item.createdAt
+                )
+                if let rIdx = builtRooms.firstIndex(where: { $0.id == item.roomId }) {
+                    builtRooms[rIdx].items.append(homeItem)
+                }
+            }
+            rooms = builtRooms.isEmpty ? HomeStore.sampleRooms() : builtRooms
+            reminders = remoteReminders.map { dto in
+                MaintenanceReminder(
+                    id: dto.id,
+                    title: dto.title,
+                    dueDate: dto.dueDate,
+                    isCompleted: dto.isCompleted,
+                    isUrgent: dto.isUrgent,
+                    itemName: dto.itemName,
+                    icon: dto.icon
+                )
+            }
+        } catch {
+            syncError = error.localizedDescription
+        }
+        isSyncing = false
+    }
+
+    func pushRoom(_ room: HomeRoom, userId: UUID) {
+        Task { try? await SyncService.shared.upsertRoom(room, userId: userId) }
+    }
+
+    func pushItem(_ item: HomeItem, userId: UUID) {
+        Task { try? await SyncService.shared.upsertItem(item, userId: userId) }
+    }
+
+    func pushReminder(_ reminder: MaintenanceReminder, userId: UUID) {
+        Task { try? await SyncService.shared.upsertReminder(reminder, userId: userId) }
+    }
+
+    func removeRoomRemote(id: UUID, userId: UUID) {
+        Task { try? await SyncService.shared.deleteRoom(id: id, userId: userId) }
+    }
+
+    func removeItemRemote(id: UUID, userId: UUID) {
+        Task { try? await SyncService.shared.deleteItem(id: id, userId: userId) }
+    }
 
     var allItems: [HomeItem] {
         rooms.flatMap { $0.items }

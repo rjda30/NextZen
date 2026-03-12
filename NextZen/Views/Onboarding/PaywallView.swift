@@ -1,22 +1,25 @@
 import SwiftUI
+import RevenueCat
 
 struct PaywallView: View {
     let onContinue: () -> Void
     let onBack: () -> Void
 
+    @StateObject private var purchases = PurchaseService.shared
     @State private var selectedPlan: Plan = .yearly
+
     private let accent = Color(hex: "1A6BFF")
     private let orange = Color(hex: "FF6B2B")
 
     enum Plan { case monthly, yearly }
 
     private let features = [
-        ("cube.box.fill", "Unlimited items & rooms", Color(hex: "1A6BFF")),
-        ("bell.badge.fill", "Smart maintenance alerts", Color(hex: "FF6B2B")),
-        ("doc.fill", "Document & receipt storage", Color(hex: "34C759")),
-        ("checkmark.shield.fill", "Warranty tracking", Color(hex: "AF52DE")),
-        ("barcode.viewfinder", "Barcode scanning", Color(hex: "1A6BFF")),
-        ("sparkles", "AI-powered suggestions", Color(hex: "FF6B2B"))
+        ("cube.box.fill",       "Unlimited items & rooms",      Color(hex: "1A6BFF")),
+        ("bell.badge.fill",     "Smart maintenance alerts",     Color(hex: "FF6B2B")),
+        ("doc.fill",            "Document & receipt storage",   Color(hex: "34C759")),
+        ("checkmark.shield.fill","Warranty tracking",           Color(hex: "AF52DE")),
+        ("barcode.viewfinder",  "Barcode scanning",             Color(hex: "1A6BFF")),
+        ("sparkles",            "AI-powered suggestions",       Color(hex: "FF6B2B"))
     ]
 
     var body: some View {
@@ -28,14 +31,30 @@ struct PaywallView: View {
                     featureList
                     planSelector
                     ctaSection
-                    skipButton
+                    restoreButton
+                    legalText
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
-                .padding(.bottom, 32)
+                .padding(.bottom, 40)
             }
         }
         .background(Color.white.ignoresSafeArea())
+        .task { await purchases.loadOfferings() }
+        .overlay {
+            if purchases.isLoading {
+                Color.black.opacity(0.3).ignoresSafeArea()
+                ProgressView().tint(.white).scaleEffect(1.4)
+            }
+        }
+        .alert("Error", isPresented: Binding(
+            get: { purchases.errorMessage != nil },
+            set: { if !$0 { purchases.errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(purchases.errorMessage ?? "")
+        }
     }
 
     // MARK: Top
@@ -68,7 +87,8 @@ struct PaywallView: View {
                 Image(systemName: "crown.fill")
                     .font(.system(size: 34))
                     .foregroundStyle(
-                        LinearGradient(colors: [orange, accent], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        LinearGradient(colors: [orange, accent],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing)
                     )
             }
             Text("Unlock NextZen Premium")
@@ -109,9 +129,32 @@ struct PaywallView: View {
     // MARK: Plans
     private var planSelector: some View {
         VStack(spacing: 10) {
-            planCard(plan: .yearly, title: "Yearly", price: "$29.99/yr", badge: "Best Value", sub: "Just $2.50/month")
-            planCard(plan: .monthly, title: "Monthly", price: "$4.99/mo", badge: nil, sub: "Cancel anytime")
+            planCard(plan: .yearly,  title: "Yearly",  price: yearlyPrice,   badge: "Best Value", sub: "Just \(yearlyMonthly)/month")
+            planCard(plan: .monthly, title: "Monthly", price: monthlyPrice,  badge: nil,          sub: "Cancel anytime")
         }
+    }
+
+    private var yearlyPrice: String {
+        if let pkg = purchases.offerings?.current?.annual {
+            return pkg.storeProduct.localizedPriceString + "/yr"
+        }
+        return "$29.99/yr"
+    }
+
+    private var monthlyPrice: String {
+        if let pkg = purchases.offerings?.current?.monthly {
+            return pkg.storeProduct.localizedPriceString + "/mo"
+        }
+        return "$4.99/mo"
+    }
+
+    private var yearlyMonthly: String {
+        if let pkg = purchases.offerings?.current?.annual {
+            let monthly = pkg.storeProduct.price / 12
+            let formatted = pkg.storeProduct.priceFormatter?.string(from: monthly as NSDecimalNumber) ?? "$2.50"
+            return formatted
+        }
+        return "$2.50"
     }
 
     private func planCard(plan: Plan, title: String, price: String, badge: String?, sub: String) -> some View {
@@ -163,29 +206,55 @@ struct PaywallView: View {
     // MARK: CTA
     private var ctaSection: some View {
         VStack(spacing: 12) {
-            Button(action: onContinue) {
+            Button(action: {
+                Task {
+                    if selectedPlan == .yearly {
+                        await purchases.purchaseYearly()
+                    } else {
+                        await purchases.purchaseMonthly()
+                    }
+                    if purchases.isPremium { onContinue() }
+                }
+            }) {
                 Text(selectedPlan == .yearly ? "Start Free 7-Day Trial" : "Get Monthly Access")
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(
-                        LinearGradient(colors: [accent, Color(hex: "0049CC")], startPoint: .leading, endPoint: .trailing)
+                        LinearGradient(colors: [accent, Color(hex: "0049CC")],
+                                       startPoint: .leading, endPoint: .trailing)
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             }
-            Text("Cancel anytime · No commitment")
-                .font(.system(size: 12))
+            .disabled(purchases.isLoading)
+
+            Button(action: onContinue) {
+                Text("Maybe later")
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .underline()
+            }
+        }
+    }
+
+    private var restoreButton: some View {
+        Button(action: {
+            Task {
+                await purchases.restorePurchases()
+                if purchases.isPremium { onContinue() }
+            }
+        }) {
+            Text("Restore Purchases")
+                .font(.system(size: 13))
                 .foregroundColor(.secondary)
         }
     }
 
-    private var skipButton: some View {
-        Button(action: onContinue) {
-            Text("Maybe later")
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
-                .underline()
-        }
+    private var legalText: some View {
+        Text("Payment will be charged to your Apple ID at confirmation. Subscription automatically renews unless auto-renew is turned off at least 24 hours before the end of the current period.")
+            .font(.system(size: 11))
+            .foregroundColor(Color(.tertiaryLabel))
+            .multilineTextAlignment(.center)
     }
 }

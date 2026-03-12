@@ -4,16 +4,19 @@ struct AddItemSheet: View {
     @EnvironmentObject var homeStore: HomeStore
     let preselectedRoomId: UUID?
     @Binding var isPresented: Bool
+    var prefillBarcode: String? = nil
 
     @State private var name = ""
     @State private var brand = ""
     @State private var model = ""
     @State private var serial = ""
     @State private var notes = ""
+    @State private var barcode = ""
     @State private var selectedCategory = ItemCategory.electronics
     @State private var selectedRoomId: UUID? = nil
     @State private var hasWarranty = false
     @State private var warrantyDate = Calendar.current.date(byAdding: .year, value: 1, to: Date()) ?? Date()
+    @State private var showBarcodeScanner = false
 
     var body: some View {
         NavigationStack {
@@ -21,6 +24,7 @@ struct AddItemSheet: View {
                 basicInfoSection
                 categorySection
                 roomSection
+                barcodeSection
                 detailsSection
                 warrantySection
             }
@@ -36,7 +40,15 @@ struct AddItemSheet: View {
                         .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || selectedRoomId == nil)
                 }
             }
-            .onAppear { selectedRoomId = preselectedRoomId ?? homeStore.rooms.first?.id }
+            .onAppear {
+                selectedRoomId = preselectedRoomId ?? homeStore.rooms.first?.id
+                if let code = prefillBarcode { barcode = code }
+            }
+        }
+        .fullScreenCover(isPresented: $showBarcodeScanner) {
+            BarcodeScannerSheet { code in
+                barcode = code
+            }
         }
     }
 
@@ -81,10 +93,31 @@ struct AddItemSheet: View {
         }
     }
 
+    private var barcodeSection: some View {
+        Section("Barcode") {
+            HStack {
+                Image(systemName: "barcode").foregroundColor(.gray).frame(width: 24)
+                TextField("Barcode", text: $barcode)
+                if !barcode.isEmpty {
+                    Button(action: { barcode = "" }) {
+                        Image(systemName: "xmark.circle.fill").foregroundColor(.gray)
+                    }
+                    .buttonStyle(.borderless)
+                }
+            }
+            Button(action: { showBarcodeScanner = true }) {
+                Label(barcode.isEmpty ? "Scan Barcode" : "Re-scan Barcode",
+                      systemImage: "barcode.viewfinder")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(Color(hex: "1A6BFF"))
+            }
+        }
+    }
+
     private var detailsSection: some View {
         Section("Additional Details") {
             HStack {
-                Image(systemName: "barcode").foregroundColor(.gray).frame(width: 24)
+                Image(systemName: "creditcard.fill").foregroundColor(.gray).frame(width: 24)
                 TextField("Serial Number", text: $serial)
             }
             HStack {
@@ -118,7 +151,8 @@ struct AddItemSheet: View {
             notes: notes,
             icon: selectedCategory.icon,
             roomId: roomId,
-            warrantyExpires: hasWarranty ? warrantyDate : nil
+            warrantyExpires: hasWarranty ? warrantyDate : nil,
+            barcode: barcode.isEmpty ? nil : barcode
         )
         homeStore.addItem(item, toRoomId: roomId)
         isPresented = false

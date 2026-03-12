@@ -1,36 +1,36 @@
-name: product-hub
+name: NextZen
 options:
   bundleIdPrefix: com.example
   developmentLanguage: en
-
 settings:
   base:
-    PRODUCT_BUNDLE_IDENTIFIER: com.example.producthub
-    PRODUCT_NAME: product-hub
-    SWIFT_VERSION: 5.0
-    MARKETING_VERSION: 1.0
+    PRODUCT_BUNDLE_IDENTIFIER: com.example.nextzen
+    PRODUCT_NAME: NextZen
+    SWIFT_VERSION: 5
+    MARKETING_VERSION: 1
     CURRENT_PROJECT_VERSION: 1
     SUPPORTED_PLATFORMS: iphoneos iphonesimulator
     TARGETED_DEVICE_FAMILY: '1'
-    SUPPORTS_MACCATALYST: NO
-    ALWAYS_SEARCH_USER_PATHS: NO
+    SUPPORTS_MACCATALYST: 'NO'
+    ALWAYS_SEARCH_USER_PATHS: 'NO'
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-
 targets:
-  product-hub:
+  NextZen:
     type: application
     platform: iOS
     deploymentTarget: '17.0'
+    entitlements:
+      path: NextZen/NextZen.entitlements
     sources:
-      - path: product-hub
+      - path: NextZen
     info:
-      path: product-hub/Info.plist
+      path: NextZen/Info.plist
       properties:
         CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
         CFBundleDisplayName: $(PRODUCT_NAME)
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleInfoDictionaryVersion: 6.0
+        CFBundleInfoDictionaryVersion: 6
         CFBundleName: $(PRODUCT_NAME)
         CFBundlePackageType: $(PRODUCT_BUNDLE_PACKAGE_TYPE)
         CFBundleShortVersionString: $(MARKETING_VERSION)
@@ -38,9 +38,12 @@ targets:
         CFBundleIconName: AppIcon
         ITSAppUsesNonExemptEncryption: false
         LSRequiresIPhoneOS: true
+        NSCameraUsageDescription: "NextZen uses your camera to scan barcodes and capture item photos."
+        NSPhotoLibraryUsageDescription: "NextZen needs access to your photos to attach images to items."
         UIApplicationSupportsIndirectInputEvents: true
         UILaunchStoryboardName: LaunchScreen
-        UIRequiredDeviceCapabilities: [arm64]
+        UIRequiredDeviceCapabilities:
+          - arm64
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
@@ -50,13 +53,26 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-
+    dependencies:
+      - package: supabase-swift
+        product: Supabase
+      - package: purchases-ios
+        product: RevenueCat
+      - package: purchases-ios
+        product: RevenueCatUI
 schemes:
-  product-hub:
+  NextZen:
     build:
       targets:
-        product-hub: all
+        NextZen: all
     run:
       config: Debug
     archive:
       config: Release
+packages:
+  supabase-swift:
+    url: https://github.com/supabase/supabase-swift
+    from: 2.0.0
+  purchases-ios:
+    url: https://github.com/RevenueCat/purchases-ios
+    from: 5.0.0

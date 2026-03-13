@@ -25,6 +25,7 @@ struct OnboardingQuestionView: View {
             }
             bottomBar
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.white.ignoresSafeArea())
     }
 

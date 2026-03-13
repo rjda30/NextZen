@@ -57,6 +57,7 @@ struct OnboardingFeatureView: View {
             Spacer(minLength: 0)
             bottomBar
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.white.ignoresSafeArea())
     }
 

@@ -44,25 +44,20 @@ struct OnboardingFeatureView: View {
     private var data: FeatureData { features[min(step, features.count - 1)] }
 
     var body: some View {
-        GeometryReader { geo in
-            VStack(spacing: 0) {
-                topBar
-                    .padding(.top, geo.safeAreaInsets.top)
-                Spacer(minLength: 0)
-                illustration
-                VStack(alignment: .leading, spacing: 24) {
-                    titleBlock
-                    bulletList
-                }
-                .padding(.horizontal, 28)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Spacer(minLength: 0)
-                bottomBar
-                    .padding(.bottom, geo.safeAreaInsets.bottom)
+        VStack(spacing: 0) {
+            topBar
+            Spacer(minLength: 0)
+            illustration
+            VStack(alignment: .leading, spacing: 24) {
+                titleBlock
+                bulletList
             }
-            .background(Color.white)
+            .padding(.horizontal, 28)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Spacer(minLength: 0)
+            bottomBar
         }
-        .ignoresSafeArea()
+        .background(Color.white.ignoresSafeArea())
     }
 
     // MARK: Top Bar
@@ -89,6 +84,7 @@ struct OnboardingFeatureView: View {
         }
         .padding(.horizontal, 24)
         .padding(.top, 16)
+        .padding(.bottom, 8)
     }
 
     // MARK: Illustration
@@ -162,6 +158,6 @@ struct OnboardingFeatureView: View {
             .padding(.horizontal, 24)
             .padding(.vertical, 16)
         }
-        .background(Color.white)
+        .background(Color.white.ignoresSafeArea())
     }
 }

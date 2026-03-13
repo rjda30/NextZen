@@ -42,6 +42,7 @@ struct OnboardingFlowView: View {
                         onBack: { prev() })
             }
         }
+        .ignoresSafeArea()
         .animation(.easeInOut(duration: 0.3), value: currentStep)
     }
 
